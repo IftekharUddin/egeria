@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: How to work on Egeria
+    url: https://github.com/IftekharUddin/egeria/blob/main/CLAUDE.md
+    about: Build commands, crate boundaries, the issue pickup protocol, and what done looks like.
+  - name: Architecture decisions
+    url: https://github.com/IftekharUddin/egeria/tree/main/docs/adr
+    about: Why several obvious-looking changes are deliberate exclusions.
