@@ -1,0 +1,16 @@
+[package]
+name = "egeria-adapter-zeroclaw"
+description = "ZeroClaw SOP adapter: parse, import to IR, lower back, and compile."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+
+[dev-dependencies]

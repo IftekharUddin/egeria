@@ -1,0 +1,12 @@
+/target
+**/*.rs.bk
+
+# Alloy is never vendored or redistributed (ADR-0006). The JAR is fetched by
+# `cargo xtask fetch-alloy` and verified against xtask/pins/alloy-6.2.0.sha256.
+/tools/alloy/*
+!/tools/alloy/README.md
+
+# insta scratch files
+**/*.snap.new
+
+.DS_Store

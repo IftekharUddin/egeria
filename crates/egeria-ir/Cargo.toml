@@ -1,0 +1,16 @@
+[package]
+name = "egeria-ir"
+description = "Workflow IR: the harness-independent semantic core of Egeria."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+
+[dev-dependencies]
