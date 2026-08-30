@@ -1,0 +1,8 @@
+[submodule "external/zeroclaw"]
+	path = external/zeroclaw
+	url = https://github.com/zeroclaw-labs/zeroclaw
+	shallow = true
+[submodule "external/alloy"]
+	path = external/alloy
+	url = https://github.com/AlloyTools/org.alloytools.alloy
+	shallow = true
