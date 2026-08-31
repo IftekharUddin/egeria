@@ -1,0 +1,17 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: manifest_text
+---
+[sop]
+name = "linear-minimal"
+description = "Summarize the staged changelog and keep the summary in memory"
+version = "1.0.0"
+priority = "normal"
+cooldown_secs = 0
+max_concurrent = 1
+deterministic = false
+admission_policy = "parallel"
+max_pending_approvals = 0
+
+[[triggers]]
+type = "manual"

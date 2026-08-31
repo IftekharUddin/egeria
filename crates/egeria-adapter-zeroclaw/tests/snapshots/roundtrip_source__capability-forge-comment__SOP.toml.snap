@@ -1,0 +1,25 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: manifest_text
+---
+[sop]
+name = "capability-forge-comment"
+description = "Headless issue triage: draft a triage comment with llm.generate, gate it on human approval, then post it with forge.comment"
+version = "1.0.0"
+priority = "normal"
+execution_mode = "deterministic"
+cooldown_secs = 30
+max_concurrent = 3
+deterministic = false
+admission_policy = "parallel"
+max_pending_approvals = 10
+agent = "triage-bot"
+
+[[triggers]]
+type = "channel"
+channel = "git"
+alias = "main"
+condition = '$.event_type == "issues.opened"'
+
+[[triggers]]
+type = "manual"

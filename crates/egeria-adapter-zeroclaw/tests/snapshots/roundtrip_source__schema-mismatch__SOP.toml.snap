@@ -1,0 +1,23 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: manifest_text
+---
+[sop]
+name = "schema-mismatch"
+description = "Roll firing alerts up into a service summary; the step contracts disagree on purpose"
+version = "0.3.0"
+priority = "high"
+execution_mode = "deterministic"
+cooldown_secs = 60
+max_concurrent = 1
+deterministic = false
+admission_policy = "parallel"
+max_pending_approvals = 0
+
+[[triggers]]
+type = "mqtt"
+topic = "monitor/alerts/firing"
+condition = '$.severity == "critical"'
+
+[[triggers]]
+type = "manual"

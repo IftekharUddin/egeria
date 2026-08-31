@@ -1,0 +1,40 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Collect firing alerts** - Pull the current firing set from the monitor.
+   Emits a bare array. This is the producer half of the container mismatch.
+   - tools: http_request
+   - input: {"properties":{"monitor_url":{"type":"string"}},"required":["monitor_url"],"type":"object"}
+   - output: {"items":{"properties":{"alert_id":{"type":"string"},"service":{"type":"string"},"severity":{"type":"string"}},"required":["alert_id","service","severity"],"type":"object"},"type":"array"}
+   - next: 2
+
+2. **Group alerts by service** - Fold the firing set into one entry per service.
+   Consumer half of the container mismatch: this input declares an object whose
+   `alerts` property holds the array, but the previous step hands over the array
+   itself with no wrapper object around it.
+   - tools: calculator
+   - input: {"properties":{"alerts":{"items":{"properties":{"alert_id":{"type":"string"},"service":{"type":"string"},"severity":{"type":"string"}},"required":["alert_id","service","severity"],"type":"object"},"type":"array"}},"required":["alerts"],"type":"object"}
+   - output: {"properties":{"groups":{"items":{"properties":{"count":{"type":"integer"},"service":{"type":"string"}},"required":["service","count"],"type":"object"},"type":"array"},"window_minutes":{"type":"integer"}},"required":["groups","window_minutes"],"type":"object"}
+   - next: 3
+   - depends_on: 1
+   - on_failure: retry: 2
+
+3. **Format the digest** - Render the grouped counts as a message body.
+   Consumer half of the scalar mismatch: `window_minutes` arrives as an integer
+   and is declared here as a string.
+   - tools: file_write
+   - input: {"properties":{"groups":{"items":{"properties":{"count":{"type":"integer"},"service":{"type":"string"}},"required":["service","count"],"type":"object"},"type":"array"},"window_minutes":{"type":"string"}},"required":["groups","window_minutes"],"type":"object"}
+   - output: {"properties":{"digest":{"type":"string"}},"required":["digest"],"type":"object"}
+   - next: 4
+   - depends_on: 2
+
+4. **Send the digest** - Deliver the rendered digest to the on-call rotation.
+   This link is well typed; only steps one through three carry the defects.
+   - tools: pushover
+   - input: {"properties":{"digest":{"type":"string"}},"required":["digest"],"type":"object"}
+   - output: {"properties":{"delivered":{"type":"boolean"}},"required":["delivered"],"type":"object"}
+   - terminal: true
+   - depends_on: 3

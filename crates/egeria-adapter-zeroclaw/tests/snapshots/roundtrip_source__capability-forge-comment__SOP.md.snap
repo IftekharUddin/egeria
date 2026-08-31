@@ -1,0 +1,24 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Draft the triage comment** - Read the issue and write the comment body a maintainer would post.
+   - kind: capability
+   - capability: llm.generate
+   - with: {"echo":["repo","number"],"instruction":"Summarize the issue, name the component it belongs to, and propose a single triage label.","output_key":"body"}
+   - on_failure: retry: 2
+
+2. **Approve the comment** - A maintainer reads the drafted comment and amends the wording before it is posted under the bot account.
+   - kind: checkpoint
+   - depends_on: 1
+   - policy: triage
+   - edit: body
+
+3. **Post the comment** - Post the approved body to the issue thread.
+   - kind: capability
+   - capability: forge.comment
+   - with: {"channel":"git.main","repo":"zeroclaw-labs/zeroclaw"}
+   - terminal: true
+   - depends_on: 2

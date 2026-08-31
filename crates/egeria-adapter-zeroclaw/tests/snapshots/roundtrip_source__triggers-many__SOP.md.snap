@@ -1,0 +1,24 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Collect** - Read the artifact manifest that announced this run.
+   - tools: file_read, http_request
+   - output: {"required":["artifact","sha256"],"type":"object"}
+
+2. **Verify** - Recompute the checksum of the downloaded artifact and compare it against the manifest.
+   - allow-tools: shell
+   - deny-tools: git_operations
+   - depends_on: 1
+   - on_failure: retry: 2
+
+3. **Record** - Store the verified digest so later releases can diff against it.
+   - tools: memory_store
+   - depends_on: 2
+
+4. **Announce** - Tell the release channel that the artifact landed and verified.
+   - tools: pushover
+   - terminal: true
+   - depends_on: 3

@@ -1,0 +1,31 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Classify the alert** - Match the incoming alert against the open incidents and the recent-duplicate window.
+   - tools: memory_recall
+   - output: {"required":["classification","fingerprint"],"type":"object"}
+   - switch: duplicate>$.steps.1.classification == "duplicate">2; incident>$.steps.1.classification == "incident">3; defer>>4
+
+2. **Close as a duplicate** - Bump the occurrence count on the existing incident and stop; there is nothing to page about.
+   - tools: memory_store
+   - input: {"required":["fingerprint"],"type":"object"}
+   - terminal: true
+
+3. **Page the on-call** - Send the page with the alert body and the incident link.
+   - tools: pushover
+   - input: {"required":["classification","fingerprint"],"type":"object"}
+   - output: {"required":["paged_at"],"type":"object"}
+   - next: 5
+   - on_failure: retry: 2
+
+4. **File for morning triage** - Park the alert on the triage queue for the next working day and stop.
+   - tools: memory_store
+   - terminal: true
+
+5. **Record the page** - Store who was paged and when, so a repeat inside the window classifies as a duplicate.
+   - tools: memory_store
+   - terminal: true
+   - depends_on: 3

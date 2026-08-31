@@ -1,0 +1,25 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: manifest_text
+---
+[sop]
+name = "approval-edit-gate"
+description = "Draft an incident status-page update, let the incident commander amend the wording at the gate, then publish the approved text"
+version = "0.4.0"
+priority = "critical"
+execution_mode = "supervised"
+cooldown_secs = 60
+max_concurrent = 2
+deterministic = false
+admission_policy = "parallel"
+max_pending_approvals = 6
+agent = "incident-bot"
+
+[[triggers]]
+type = "webhook"
+path = "/sop/incident-status"
+
+[[triggers]]
+type = "mqtt"
+topic = "ops/incident/+/status"
+condition = '$.severity == "critical"'

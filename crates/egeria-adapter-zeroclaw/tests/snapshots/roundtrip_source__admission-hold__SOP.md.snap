@@ -1,0 +1,34 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Snapshot** - Take a logical backup of the target database before touching the schema.
+   - allow-tools: shell
+   - deny-tools: file_write
+   - requires_confirmation: true
+   - on_failure: retry: 1
+
+2. **Plan** - Render the pending migration as the exact statements that will run.
+   - tools: file_read, shell
+   - output: {"required":["statements"],"type":"object"}
+   - depends_on: 1
+
+3. **Approve** - Hold here until a release approver signs off on the statements.
+   - kind: checkpoint
+   - depends_on: 2
+   - prompt: Apply this migration to production?
+   - policy: prod
+   - edit: statements
+
+4. **Apply** - Run the approved statements against production.
+   - allow-tools: shell
+   - deny-tools: file_write, git_operations
+   - terminal: true
+   - depends_on: 3
+   - on_failure: goto: 5
+
+5. **Rollback** - Restore the snapshot and page the on-call engineer.
+   - tools: shell, pushover
+   - terminal: true

@@ -1,0 +1,25 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: manifest_text
+---
+[sop]
+name = "tool-scopes"
+description = "Cut a release branch, with each step's tool surface scoped independently"
+version = "0.4.1"
+priority = "high"
+execution_mode = "supervised"
+cooldown_secs = 120
+max_concurrent = 1
+deterministic = false
+admission_policy = "hold"
+max_pending_approvals = 2
+agent = "release-bot"
+
+[[triggers]]
+type = "channel"
+channel = "git"
+alias = "main"
+condition = '$.event_type == "release.published"'
+
+[[triggers]]
+type = "manual"

@@ -1,0 +1,29 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Collect the health snapshot** - Read the rollout metrics the deploy job left on disk.
+   - tools: file_read
+   - output: {"required":["version","error_rate","p99_ms"],"type":"object"}
+
+2. **Decide what to publish** - Map the raw metrics onto one of the three public status levels.
+   - tools: calculator
+   - input: {"required":["error_rate","p99_ms"],"type":"object"}
+   - output: {"required":["level","summary","unchanged"],"type":"object"}
+   - when: $.steps.2.unchanged == "true"
+   - next: 4
+
+3. **Push to the status page** - POST the component update to the status API, which is intermittently unavailable.
+   - allow-tools: http_request
+   - deny-tools: shell, file_write
+   - input: {"required":["level","summary"],"type":"object"}
+   - output: {"required":["incident_id"],"type":"object"}
+   - on_failure: retry: 2
+
+4. **Record the decided level** - Keep the level the run settled on so the next run can suppress a duplicate update.
+   - tools: memory_store
+   - input: {"required":["level"],"type":"object"}
+   - terminal: true
+   - depends_on: 2

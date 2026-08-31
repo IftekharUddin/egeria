@@ -1,0 +1,23 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: manifest_text
+---
+[sop]
+name = "goto-cycle"
+description = "Log shipper drain whose failure handlers hand off to one another in a closed loop with no exit"
+version = "0.2.0"
+priority = "high"
+execution_mode = "auto"
+cooldown_secs = 60
+max_concurrent = 1
+deterministic = false
+admission_policy = "parallel"
+max_pending_approvals = 0
+
+[[triggers]]
+type = "mqtt"
+topic = "fleet/+/shipper/backlog"
+condition = "$.pending > 5"
+
+[[triggers]]
+type = "manual"

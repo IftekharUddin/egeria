@@ -1,0 +1,38 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Classify the alert** - Inspect the incoming payload and label its severity.
+   - tools: http_request
+   - output: {"properties":{"severity":{"type":"string"}},"required":["severity"],"type":"object"}
+   - when: $.steps.1.severity == "critical"
+   - next: 3
+
+2. **Record and close** - File a non-critical reading and stop without paging anyone.
+   - tools: memory_store
+   - terminal: true
+
+3. **Prepare the remediation plan** - Build the operator-facing plan for the valve change.
+   - tools: file_read, calculator
+   - next: 4
+   - depends_on: 1
+   - on_failure: retry: 2
+
+4. **Apply the remediation** - Run the approved command against the pump controller.
+   - allow-tools: shell
+   - deny-tools: file_write
+   - requires_confirmation: true
+   - next: 6
+   - on_failure: goto: 5
+
+5. **Page the operator** - Send a failure notice so a human picks the alert up.
+   - tools: pushover
+   - terminal: true
+
+6. **Confirm the pressure dropped** - Re-read the sensor and close the incident.
+   - tools: http_request
+   - output: {"properties":{"pressure_ok":{"type":"boolean"}},"required":["pressure_ok"],"type":"object"}
+   - when: $.steps.6.pressure_ok == "true"
+   - terminal: true
