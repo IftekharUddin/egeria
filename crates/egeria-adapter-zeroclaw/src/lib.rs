@@ -15,6 +15,7 @@ pub mod diagnostic;
 pub mod error;
 pub mod manifest;
 pub mod model;
+pub mod sop;
 pub mod steps;
 
 pub use diagnostic::{Diagnostic, DiagnosticKind, Location, Severity};
@@ -25,4 +26,5 @@ pub use model::{
     SopMeta, SopPriority, SopStep, SopStepKind, SopTrigger, StepFailure, StepPos, StepPosition,
     StepRouting, StepSchema, StepToolScope, SwitchRule,
 };
-pub use steps::parse_steps;
+pub use sop::{read_sop, read_sop_str, render_sop, write_sop};
+pub use steps::{parse_steps, print_steps};
