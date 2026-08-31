@@ -1,0 +1,14 @@
+[sop]
+name = "terminal-early"
+description = "Alert-bus triage that finishes at step 2 for duplicates, leaving the later steps reachable only by an explicit jump"
+version = "1.1.0"
+priority = "high"
+execution_mode = "auto"
+cooldown_secs = 0
+max_concurrent = 4
+admission_policy = "parallel"
+
+[[triggers]]
+type = "amqp"
+routing_key = "alerts.prod.*.raised"
+condition = "$.severity == \"page\""

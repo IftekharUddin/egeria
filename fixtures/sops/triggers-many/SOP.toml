@@ -1,0 +1,34 @@
+[sop]
+name = "triggers-many"
+description = "Ingest a release artifact however it is announced: an upload webhook, a six-hourly sweep, a forge release event, a scheduled release window, or a file landing in the drop directory"
+version = "0.4.0"
+priority = "high"
+execution_mode = "supervised"
+cooldown_secs = 30
+max_concurrent = 2
+
+[[triggers]]
+type = "webhook"
+path = "/sop/artifact-intake"
+
+[[triggers]]
+type = "cron"
+expression = "0 */6 * * *"
+
+[[triggers]]
+type = "channel"
+channel = "git"
+alias = "main"
+condition = "$.event_type == \"release.published\""
+
+[[triggers]]
+type = "filesystem"
+path = "/var/inbox/artifacts/**/*.json"
+events = ["created", "modified"]
+condition = "$.extension == \"json\""
+
+[[triggers]]
+type = "calendar"
+calendar_source = "microsoft365"
+calendar_ids = ["release-window", "oncall"]
+condition = "$.summary == \"artifact intake\""

@@ -1,0 +1,23 @@
+[sop]
+name = "trigger-conditions"
+description = "Escalate pump-house alarms only when the payload itself says so: an MQTT topic filter with a JSON-path guard, an AMQP routing key with a numeric guard, and a peripheral edge"
+version = "0.2.1"
+priority = "critical"
+cooldown_secs = 120
+max_concurrent = 3
+
+[[triggers]]
+type = "mqtt"
+topic = "facility/+/pressure/#"
+condition = "$.status == \"critical\""
+
+[[triggers]]
+type = "amqp"
+routing_key = "facility.alarm.pump.#"
+condition = "$.retry_count > 3"
+
+[[triggers]]
+type = "peripheral"
+board = "nucleo-f401re-0"
+signal = "pin_3"
+condition = "> 0"

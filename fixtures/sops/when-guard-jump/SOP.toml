@@ -1,0 +1,18 @@
+[sop]
+name = "when-guard-jump"
+description = "Triage a pressure alert and remediate only critical severities"
+version = "1.1.0"
+priority = "high"
+execution_mode = "supervised"
+cooldown_secs = 60
+max_concurrent = 1
+admission_policy = "coalesce"
+agent = "oncall-bot"
+
+[[triggers]]
+type = "mqtt"
+topic = "facility/pump/pressure"
+condition = "$.value > 85"
+
+[[triggers]]
+type = "manual"

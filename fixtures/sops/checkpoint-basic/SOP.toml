@@ -1,0 +1,18 @@
+[sop]
+name = "checkpoint-basic"
+description = "Roll the ingest worker pool onto a new config, pausing for an operator to eyeball the rendered file before anything restarts"
+version = "1.2.0"
+priority = "high"
+cooldown_secs = 300
+max_concurrent = 1
+deterministic = true
+admission_policy = "hold"
+max_pending_approvals = 4
+
+[[triggers]]
+type = "manual"
+
+[[triggers]]
+type = "filesystem"
+path = "/srv/ingest/config/*.toml"
+events = ["created", "modified"]

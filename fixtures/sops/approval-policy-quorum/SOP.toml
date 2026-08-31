@@ -1,0 +1,25 @@
+# The `prod` policy named by step 3 is not defined here. Approval groups and
+# policies live in the daemon config under `[sop.approval.groups.*]` and
+# `[sop.approval.policies.*]`; a SOP only names one. Writing an `[sop.approval]`
+# block into this file would be an unknown key inside `[sop]` and silently
+# dropped.
+[sop]
+name = "approval-policy-quorum"
+description = "Cut a tagged release once two members of the release group have signed off under the prod approval policy"
+version = "2.0.1"
+priority = "critical"
+execution_mode = "step_by_step"
+cooldown_secs = 900
+max_concurrent = 1
+admission_policy = "coalesce"
+max_pending_approvals = 2
+agent = "release-bot"
+
+[[triggers]]
+type = "manual"
+
+[[triggers]]
+type = "channel"
+channel = "git"
+alias = "main"
+condition = "$.event_type == \"release.published\""

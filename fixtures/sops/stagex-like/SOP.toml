@@ -1,0 +1,26 @@
+[sop]
+name = "stagex-like"
+description = "Deterministic package update: resolve the upstream version, bump it, build reproducibly, refresh patches, record the digest, commit, open the pull request, and announce"
+version = "2.1.0"
+priority = "high"
+execution_mode = "deterministic"
+cooldown_secs = 600
+max_concurrent = 1
+deterministic = true
+admission_policy = "coalesce"
+max_pending_approvals = 1
+agent = "release-bot"
+
+[[triggers]]
+type = "amqp"
+routing_key = "org.release.anitya.version.#"
+condition = "$.project.name == \"bzip2\""
+
+[[triggers]]
+type = "channel"
+channel = "git"
+alias = "main"
+condition = "$.event_type == \"release.published\""
+
+[[triggers]]
+type = "manual"
