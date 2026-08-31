@@ -1,0 +1,52 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Inventory the incoming directory** - List the batches waiting to be mirrored.
+   No agent override, so this runs as the procedure's own alias.
+   - tools: file_read
+   - output: {"properties":{"batches":{"items":{"type":"string"},"type":"array"}},"required":["batches"],"type":"object"}
+   - next: 2
+   - mode: deterministic
+
+2. **Verify checksums** - Check every archive against its signed manifest.
+   - tools: shell
+   - allow-tools: shell
+   - next: 3
+   - depends_on: 1
+   - on_failure: retry: 3
+   - mode: step_by_step
+   - agent: verify-bot
+
+3. **Approve the publish** - Hold the batch until a human releases it.
+   A checkpoint under a supervised override, run by the release alias rather
+   than the mirror alias that owns the rest of the procedure.
+   - requires_confirmation: true
+   - kind: checkpoint
+   - next: 4
+   - depends_on: 2
+   - mode: supervised
+   - agent: release-bot
+   - prompt: Publish the verified mirror batch?
+   - policy: prod
+
+4. **Sync to the public mirror** - Push the approved batch outward.
+   A push that fails still has to be recorded, so the failure route lands on the
+   same bookkeeping step the success route does.
+   - tools: shell
+   - allow-tools: shell
+   - deny-tools: file_write
+   - next: 5
+   - depends_on: 3
+   - on_failure: goto: 5
+   - mode: auto
+   - agent: mirror-bot
+
+5. **Record the outcome** - Remember what shipped, or what stalled, so the next
+   run picks up in the right place.
+   - tools: memory_store
+   - terminal: true
+   - depends_on: 4
+   - mode: priority_based

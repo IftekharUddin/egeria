@@ -1,0 +1,21 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: manifest_text
+---
+[sop]
+name = "switch-multiway"
+description = "Dispatch a forge event to the handler that matches its event type"
+version = "2.0.0"
+priority = "normal"
+execution_mode = "auto"
+cooldown_secs = 0
+max_concurrent = 2
+deterministic = false
+admission_policy = "parallel"
+max_pending_approvals = 0
+
+[[triggers]]
+type = "channel"
+channel = "git"
+alias = "main"
+condition = '$.event_type != "push"'

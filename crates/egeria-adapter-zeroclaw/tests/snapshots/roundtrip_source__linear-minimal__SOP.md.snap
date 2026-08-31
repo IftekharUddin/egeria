@@ -1,0 +1,14 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Read the staged changelog** - Load the release notes collected for this cycle.
+   - tools: file_read
+
+2. **Summarize the entries** - Condense the changelog into one operator-facing paragraph.
+   - tools: llm_task
+
+3. **Store the summary** - Keep the paragraph so later runs can recall it.
+   - tools: memory_store

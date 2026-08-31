@@ -1,0 +1,34 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Pin the revision** - Record the commit the audit ran against so the report is reproducible.
+   - tools: git_operations
+   - output: {"required":["commit","branch"],"type":"object"}
+
+2. **Scan the lockfile** - Run the offline advisory scan over Cargo.lock and emit the matched advisories.
+   - allow-tools: shell
+   - deny-tools: http_request
+   - input: {"required":["commit"],"type":"object"}
+   - output: {"required":["advisories"],"type":"object"}
+   - depends_on: 1
+
+3. **Fetch the advisory feed** - Pull the published advisory index for the same day from the RustSec mirror.
+   - tools: http_request
+   - input: {"required":["commit"],"type":"object"}
+   - output: {"required":["feed"],"type":"object"}
+   - depends_on: 1
+   - on_failure: retry: 1
+
+4. **Reconcile both sources** - Join the local scan against the published feed and flag anything present in one but not the other.
+   - tools: calculator, memory_recall
+   - input: {"required":["advisories","feed"],"type":"object"}
+   - output: {"required":["unmatched","total"],"type":"object"}
+   - depends_on: 2, 3
+
+5. **File the report** - Store the reconciled audit under the nightly key and notify the release channel.
+   - tools: memory_store, pushover
+   - terminal: true
+   - depends_on: 4

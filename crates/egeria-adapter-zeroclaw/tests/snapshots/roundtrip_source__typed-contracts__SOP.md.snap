@@ -1,0 +1,41 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Read the lock file** - Load the workspace lock file and list every resolved crate.
+   - tools: file_read
+   - input: {"properties":{"workspace":{"type":"string"}},"required":["workspace"],"type":"object"}
+   - output: {"properties":{"packages":{"items":{"properties":{"name":{"type":"string"},"version":{"type":"string"}},"required":["name","version"],"type":"object"},"type":"array"}},"required":["packages"],"type":"object"}
+   - next: 2
+
+2. **Query the advisory database** - Ask the advisory service about each resolved crate.
+   - tools: http_request
+   - input: {"properties":{"packages":{"items":{"properties":{"name":{"type":"string"},"version":{"type":"string"}},"required":["name","version"],"type":"object"},"type":"array"}},"required":["packages"],"type":"object"}
+   - output: {"properties":{"advisories":{"items":{"properties":{"id":{"type":"string"},"package":{"type":"string"},"severity":{"type":"string"}},"required":["id","package","severity"],"type":"object"},"type":"array"}},"required":["advisories"],"type":"object"}
+   - next: 3
+   - depends_on: 1
+   - on_failure: retry: 2
+
+3. **Rank by severity** - Count the critical hits and render a plain-text report.
+   - tools: calculator
+   - input: {"properties":{"advisories":{"items":{"properties":{"id":{"type":"string"},"package":{"type":"string"},"severity":{"type":"string"}},"required":["id","package","severity"],"type":"object"},"type":"array"}},"required":["advisories"],"type":"object"}
+   - output: {"properties":{"critical_count":{"type":"integer"},"report":{"type":"string"}},"required":["critical_count","report"],"type":"object"}
+   - next: 4
+   - depends_on: 2
+
+4. **Store the report** - Keep the rendered report so tomorrow's run can diff against it.
+   - tools: memory_store
+   - input: {"properties":{"critical_count":{"type":"integer"},"report":{"type":"string"}},"required":["critical_count","report"],"type":"object"}
+   - output: {"properties":{"key":{"type":"string"}},"required":["key"],"type":"object"}
+   - next: 5
+   - depends_on: 3
+
+5. **Page on critical findings** - Notify the on-call rotation, but only when something critical landed.
+   - tools: pushover
+   - input: {"properties":{"key":{"type":"string"}},"required":["key"],"type":"object"}
+   - output: {"properties":{"delivered":{"type":"boolean"}},"required":["delivered"],"type":"object"}
+   - when: $.steps.3.critical_count > 0
+   - terminal: true
+   - depends_on: 4

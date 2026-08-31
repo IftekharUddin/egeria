@@ -1,0 +1,27 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Sample** - Pull the last five pressure readings for the pump that raised the alarm.
+   - tools: http_request
+   - output: {"required":["pump","readings"],"type":"object"}
+   - on_failure: retry: 2
+
+2. **Classify** - Decide whether this is a momentary spike or a sustained overpressure.
+   - tools: calculator, memory_recall
+   - input: {"required":["pump","readings"],"type":"object"}
+   - output: {"required":["classification","peak_psi"],"type":"object"}
+   - depends_on: 1
+   - switch: sustained>$.classification == "sustained">3; spike>>4
+
+3. **Escalate** - Page the on-call engineer and open the isolation valve.
+   - allow-tools: pushover, http_request
+   - deny-tools: shell
+   - requires_confirmation: true
+   - terminal: true
+
+4. **Log** - Record the spike for the weekly trend review and leave the pump alone.
+   - tools: memory_store
+   - terminal: true

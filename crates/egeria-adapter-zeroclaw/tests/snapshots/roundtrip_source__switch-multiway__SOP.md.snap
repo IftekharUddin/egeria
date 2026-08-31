@@ -1,0 +1,33 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Read the forge event** - Classify the inbound webhook payload by event type.
+   - tools: http_request
+   - output: {"properties":{"event_type":{"type":"string"}},"required":["event_type"],"type":"object"}
+   - switch: opened>$.steps.1.event_type == "pull_request.opened">2; merged>$.steps.1.event_type == "pull_request.merged">3; review>$.steps.1.event_type == "pull_request_review_comment.created">4; other>>5
+
+2. **Greet the contributor** - Post the review checklist on a newly opened pull request.
+   - kind: capability
+   - capability: forge.comment
+   - with: {"body":"Thanks for the pull request. A reviewer will pick this up shortly.","channel":"git.main","number":41,"repo":"zeroclaw-labs/zeroclaw"}
+   - terminal: true
+
+3. **Cut the changelog entry** - Append the merged pull request to the release notes.
+   - tools: file_read, file_write, git_operations
+   - allow-tools: file_write
+   - terminal: true
+   - on_failure: retry: 3
+
+4. **Route the review comment** - Notify the author that a reviewer left a note.
+   - kind: capability
+   - capability: notify.channel
+   - with: {"channel":"discord.ops","message":"New review comment on the release branch."}
+   - terminal: true
+
+5. **Record the unhandled event** - Keep the payload so the dispatch table can be widened later.
+   - tools: memory_store
+   - terminal: true
+   - agent: triage-bot

@@ -1,0 +1,20 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: manifest_text
+---
+[sop]
+name = "terminal-early"
+description = "Alert-bus triage that finishes at step 2 for duplicates, leaving the later steps reachable only by an explicit jump"
+version = "1.1.0"
+priority = "high"
+execution_mode = "auto"
+cooldown_secs = 0
+max_concurrent = 4
+deterministic = false
+admission_policy = "parallel"
+max_pending_approvals = 0
+
+[[triggers]]
+type = "amqp"
+routing_key = "alerts.prod.*.raised"
+condition = '$.severity == "page"'

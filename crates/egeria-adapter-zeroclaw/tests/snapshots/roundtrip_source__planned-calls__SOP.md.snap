@@ -1,0 +1,46 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Resolve the release tag** - Find the tag this release points at.
+   - tools: git_operations
+   - output: {"properties":{"tag":{"type":"string"}},"required":["tag"],"type":"object"}
+   - next: 2
+   - call: {"tool":"git_operations","args":{"match":"v*","operation":"describe"},"pinned":{"commit":"9f2c1ab","tag":"v0.7.3"}}
+
+2. **Gather commits and issues** - Two calls, both bound to the resolved tag.
+   - tools: shell, http_request
+   - next: 3
+   - depends_on: 1
+   - on_failure: retry: 2
+   - call: {"tool":"shell","args":{"command":"git log --oneline {{steps.1}}..HEAD"}}
+   - call: {"tool":"http_request","args":{"method":"GET","query":{"milestone":"{{steps.1}}","state":"closed"},"url":"https://forge.internal/api/repos/zeroclaw-labs/zeroclaw/issues"},"pinned":{"count":31,"status":200}}
+
+3. **Draft the notes** - Turn the commit list into prose.
+   The planned call caches the raw commit list next to the draft, so a reviewer
+   who disputes the wording can regenerate it without re-running the log.
+   - kind: capability
+   - capability: llm.generate
+   - with: {"echo":["tag"],"instruction":"Write release notes grouped by area from the commit list and closed issues.","output_key":"body"}
+   - next: 4
+   - depends_on: 2
+   - call: {"tool":"file_write","args":{"content":"{{steps.2}}","path":".release/commits.md"},"pinned":{"bytes_written":4096}}
+
+4. **Approve the notes** - Read the draft before anything is published.
+   - requires_confirmation: true
+   - kind: checkpoint
+   - next: 5
+   - depends_on: 3
+   - prompt: Publish these release notes?
+   - policy: prod
+   - edit: body
+
+5. **Publish the notes** - Post the approved body and announce it.
+   - kind: capability
+   - capability: forge.comment
+   - with: {"body":"{{steps.4}}","channel":"git.main","number":812,"repo":"zeroclaw-labs/zeroclaw"}
+   - terminal: true
+   - depends_on: 4
+   - call: {"tool":"pushover","args":{"message":"{{steps.1}} notes are live","title":"Release notes posted"}}

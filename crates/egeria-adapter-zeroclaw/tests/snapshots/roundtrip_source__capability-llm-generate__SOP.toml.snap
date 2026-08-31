@@ -1,0 +1,23 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: manifest_text
+---
+[sop]
+name = "capability-llm-generate"
+description = "Nightly digest of failing CI runs, summarized by the llm.generate capability and filed into memory for the morning triage"
+version = "0.3.0"
+priority = "normal"
+execution_mode = "deterministic"
+cooldown_secs = 3600
+max_concurrent = 1
+deterministic = false
+admission_policy = "drop"
+max_pending_approvals = 0
+agent = "release-bot"
+
+[[triggers]]
+type = "cron"
+expression = "0 3 * * *"
+
+[[triggers]]
+type = "manual"

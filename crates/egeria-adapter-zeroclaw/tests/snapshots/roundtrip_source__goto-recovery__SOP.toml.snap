@@ -1,0 +1,29 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: manifest_text
+---
+[sop]
+name = "goto-recovery"
+description = "Renew and install the edge TLS certificate, routing every failure to a single escalation step"
+version = "2.0.0"
+priority = "critical"
+execution_mode = "step_by_step"
+cooldown_secs = 900
+max_concurrent = 1
+deterministic = false
+admission_policy = "hold"
+max_pending_approvals = 4
+agent = "release-bot"
+
+[[triggers]]
+type = "cron"
+expression = "0 6 * * *"
+
+[[triggers]]
+type = "filesystem"
+path = "/etc/edge/certs/*.pem"
+events = [
+    "modified",
+    "deleted",
+]
+condition = '$.extension == "pem"'

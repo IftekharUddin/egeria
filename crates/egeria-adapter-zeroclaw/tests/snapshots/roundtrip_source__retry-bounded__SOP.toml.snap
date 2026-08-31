@@ -1,0 +1,23 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: manifest_text
+---
+[sop]
+name = "retry-bounded"
+description = "Publish release health to the public status page, tolerating a flaky upstream API with a bounded retry"
+version = "1.2.0"
+priority = "high"
+execution_mode = "auto"
+cooldown_secs = 120
+max_concurrent = 2
+deterministic = false
+admission_policy = "coalesce"
+max_pending_approvals = 0
+
+[[triggers]]
+type = "webhook"
+path = "/sop/release-health"
+
+[[triggers]]
+type = "cron"
+expression = "*/15 * * * *"

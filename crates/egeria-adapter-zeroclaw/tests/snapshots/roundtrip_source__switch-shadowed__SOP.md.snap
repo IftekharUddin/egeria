@@ -1,0 +1,35 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Select the rollout lane** - Read the requested stage off the deploy request.
+   - tools: file_read
+   - output: {"properties":{"stage":{"type":"string"}},"required":["stage"],"type":"object"}
+   - switch: canary>$.steps.1.stage == "canary">2; full>$.steps.1.stage == "canary">3; any>>4; rollback>$.steps.1.stage == "rollback">5
+
+2. **Ship to the canary fleet** - Deploy to the ten percent canary slice and watch it.
+   - tools: shell, http_request
+   - allow-tools: shell
+   - requires_confirmation: true
+   - terminal: true
+   - on_failure: goto: 5
+
+3. **Ship to the full fleet** - Roll the release out to every remaining host.
+   - tools: shell
+   - requires_confirmation: true
+   - terminal: true
+   - on_failure: goto: 5
+
+4. **Hold for a human** - Nothing matched a named lane, so ask before touching prod.
+   - kind: checkpoint
+   - terminal: true
+   - prompt: No rollout lane matched. Approve a manual deploy?
+   - policy: prod
+   - edit: stage
+
+5. **Roll back** - Restore the previously released build and page the on-call.
+   - tools: shell, pushover
+   - deny-tools: file_write
+   - terminal: true

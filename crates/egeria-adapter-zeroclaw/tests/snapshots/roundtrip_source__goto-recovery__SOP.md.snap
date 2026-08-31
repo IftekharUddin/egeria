@@ -1,0 +1,32 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Read the current certificate** - Parse the installed chain and compute the days remaining before expiry.
+   - tools: file_read, shell
+   - output: {"required":["serial","days_remaining"],"type":"object"}
+   - on_failure: goto: 5
+
+2. **Request the renewal** - Ask the ACME endpoint for a fresh certificate for the edge hostnames.
+   - allow-tools: http_request
+   - deny-tools: file_write
+   - input: {"required":["serial"],"type":"object"}
+   - output: {"required":["chain","fingerprint"],"type":"object"}
+   - on_failure: goto: 5
+
+3. **Install and reload** - Write the new chain into the edge config and reload the proxy without dropping connections.
+   - allow-tools: file_write, shell
+   - requires_confirmation: true
+   - input: {"required":["chain","fingerprint"],"type":"object"}
+   - on_failure: goto: 5
+
+4. **Record the rotation** - Store the new fingerprint and expiry so the next run can skip a fresh certificate.
+   - tools: memory_store
+   - terminal: true
+   - depends_on: 3
+
+5. **Escalate to the on-call** - Page the rotation with the failing stage and the current expiry window, then stop.
+   - tools: pushover
+   - terminal: true

@@ -1,0 +1,53 @@
+---
+source: crates/egeria-adapter-zeroclaw/tests/roundtrip_source.rs
+expression: markdown
+---
+## Steps
+
+1. **Resolve** - Ask the release feed for the newest upstream version of the package named in the trigger payload.
+   - tools: http_request
+   - output: {"required":["package","version","tarball_url"],"type":"object"}
+   - on_failure: retry: 3
+
+2. **Bump** - Rewrite the package Makefile and lockfile with the resolved version.
+   - allow-tools: file_read, file_write
+   - deny-tools: shell, git_operations
+   - input: {"required":["package","version"],"type":"object"}
+   - output: {"required":["package","version","changed_files"],"type":"object"}
+   - depends_on: 1
+
+3. **Build** - Build the package reproducibly in its container and keep the log.
+   - allow-tools: shell
+   - output: {"required":["artifact_path","build_log"],"type":"object"}
+   - depends_on: 2
+   - on_failure: retry: 1
+
+4. **Patch** - Refresh the patch series against the new source tree and drop any patch that upstream has taken.
+   - tools: file_read, file_write, shell
+   - output: {"required":["applied","dropped"],"type":"object"}
+   - depends_on: 2
+
+5. **Digest** - Compute the sha256 of the built artifact and check it against the reproducibility baseline.
+   - tools: shell, calculator
+   - input: {"required":["artifact_path"],"type":"object"}
+   - output: {"required":["sha256","reproducible"],"type":"object"}
+   - depends_on: 3
+
+6. **Commit** - Stage the bump, the refreshed patches, and the recorded digest on a release branch.
+   - allow-tools: git_operations
+   - deny-tools: http_request
+   - requires_confirmation: true
+   - depends_on: 4, 5
+
+7. **Open PR** - Push the release branch and open the pull request against main.
+   - tools: git_operations, http_request
+   - output: {"required":["pr_number","pr_url"],"type":"object"}
+   - depends_on: 6
+   - on_failure: retry: 2
+
+8. **Announce** - Post the release note to the announcements room.
+   - kind: capability
+   - capability: notify.channel
+   - with: {"channel":"matrix.announce","message":"package bumped; pull request open for review"}
+   - terminal: true
+   - depends_on: 7
