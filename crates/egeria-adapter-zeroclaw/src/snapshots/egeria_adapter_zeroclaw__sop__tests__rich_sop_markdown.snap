@@ -1,0 +1,29 @@
+---
+source: crates/egeria-adapter-zeroclaw/src/sop.rs
+expression: markdown
+---
+## Steps
+
+1. **Preflight** - Check service health.
+   - tools: http_request
+   - output: {"type":"object"}
+
+2. **Deploy** - Run the deployment.
+   - allow-tools: shell
+   - deny-tools: git_operations
+   - requires_confirmation: true
+   - next: 3
+   - on_failure: retry: 2
+
+3. **Approve** - Human review before publishing.
+   - kind: checkpoint
+   - prompt: Approve the deploy?
+   - policy: prod
+   - edit: body
+
+4. **Publish** - Post the result.
+   - kind: capability
+   - capability: forge.comment
+   - with: {"repo":"o/r"}
+   - terminal: true
+   - depends_on: 2, 3

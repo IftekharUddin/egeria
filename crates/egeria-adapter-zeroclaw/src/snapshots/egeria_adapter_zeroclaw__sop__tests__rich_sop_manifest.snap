@@ -1,0 +1,29 @@
+---
+source: crates/egeria-adapter-zeroclaw/src/sop.rs
+expression: manifest
+---
+[sop]
+name = "deploy-prod"
+description = "Production deploy with approval"
+version = "1.4.2"
+priority = "critical"
+cooldown_secs = 0
+max_concurrent = 1
+deterministic = false
+admission_policy = "hold"
+max_pending_approvals = 0
+agent = "release-bot"
+
+[[triggers]]
+type = "channel"
+channel = "git"
+alias = "main"
+condition = '$.event_type == "pull_request.opened"'
+
+[[triggers]]
+type = "manual"
+
+[[positions]]
+step = 1
+x = 320.5
+y = -48.0
