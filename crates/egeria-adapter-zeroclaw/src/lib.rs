@@ -8,4 +8,19 @@
 //! Reference source lives under `external/zeroclaw/` as a read-only submodule.
 //! Fetch it with `git submodule update --init --depth 1 external/zeroclaw`.
 //!
-//! This crate is a stub. See the open issues in milestones `V1-M0` and `V1-M1`.
+//! Modules land milestone by milestone; see the open issues in `V1-M0` and
+//! `V1-M1`.
+
+pub mod diagnostic;
+pub mod error;
+pub mod manifest;
+pub mod model;
+
+pub use diagnostic::{Diagnostic, DiagnosticKind, Location, Severity};
+pub use error::{ReadError, WriteError};
+pub use manifest::{parse_manifest, write_manifest};
+pub use model::{
+    FilesystemEventKind, PlannedToolCall, Sop, SopAdmissionPolicy, SopExecutionMode, SopManifest,
+    SopMeta, SopPriority, SopStep, SopStepKind, SopTrigger, StepFailure, StepPos, StepPosition,
+    StepRouting, StepSchema, StepToolScope, SwitchRule,
+};
