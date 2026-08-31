@@ -1,0 +1,16 @@
+[sop]
+name = "typed-contracts"
+description = "Nightly advisory scan over a workspace lock file, chained through typed step contracts"
+version = "1.2.0"
+priority = "high"
+execution_mode = "deterministic"
+cooldown_secs = 3600
+max_concurrent = 1
+admission_policy = "coalesce"
+
+[[triggers]]
+type = "cron"
+expression = "0 3 * * *"
+
+[[triggers]]
+type = "manual"

@@ -1,0 +1,7 @@
+[sop]
+name = "linear-minimal"
+description = "Summarize the staged changelog and keep the summary in memory"
+version = "1.0.0"
+
+[[triggers]]
+type = "manual"

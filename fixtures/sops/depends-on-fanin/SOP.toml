@@ -1,0 +1,16 @@
+[sop]
+name = "depends-on-fanin"
+description = "Nightly dependency audit that gathers two independent evidence streams and joins them into a single report"
+version = "0.4.1"
+priority = "normal"
+execution_mode = "deterministic"
+cooldown_secs = 3600
+max_concurrent = 1
+agent = "release-bot"
+
+[[triggers]]
+type = "cron"
+expression = "0 3 * * *"
+
+[[triggers]]
+type = "manual"

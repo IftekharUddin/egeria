@@ -1,0 +1,25 @@
+[sop]
+name = "mode-overrides"
+description = "Publish verified artifacts to the public mirror; deterministic overall, with per-step mode and agent overrides"
+version = "2.0.0"
+priority = "normal"
+execution_mode = "step_by_step"
+cooldown_secs = 900
+max_concurrent = 1
+deterministic = true
+admission_policy = "coalesce"
+max_pending_approvals = 1
+agent = "mirror-bot"
+
+[[triggers]]
+type = "cron"
+expression = "0 */6 * * *"
+
+[[triggers]]
+type = "filesystem"
+path = "/srv/mirror/incoming/**/*.tar.zst"
+events = ["created", "modified"]
+condition = "$.extension == \"zst\""
+
+[[triggers]]
+type = "manual"

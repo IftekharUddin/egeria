@@ -1,0 +1,34 @@
+[sop]
+name = "positions"
+description = "Nightly log triage, laid out by hand on the Blueprint canvas so the manifest carries coordinates the step prose never sees"
+version = "0.3.0"
+priority = "normal"
+cooldown_secs = 0
+max_concurrent = 1
+
+[[triggers]]
+type = "cron"
+expression = "30 2 * * *"
+
+[[triggers]]
+type = "manual"
+
+[[positions]]
+step = 1
+x = -120.0
+y = -48.0
+
+[[positions]]
+step = 2
+x = 320.5
+y = 96.0
+
+[[positions]]
+step = 3
+x = 760.0
+y = -220.75
+
+[[positions]]
+step = 4
+x = 1180.0
+y = 96.0

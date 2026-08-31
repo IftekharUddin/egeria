@@ -1,0 +1,16 @@
+[sop]
+name = "schema-mismatch"
+description = "Roll firing alerts up into a service summary; the step contracts disagree on purpose"
+version = "0.3.0"
+priority = "high"
+execution_mode = "deterministic"
+cooldown_secs = 60
+max_concurrent = 1
+
+[[triggers]]
+type = "mqtt"
+topic = "monitor/alerts/firing"
+condition = "$.severity == \"critical\""
+
+[[triggers]]
+type = "manual"

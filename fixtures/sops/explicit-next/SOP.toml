@@ -1,0 +1,11 @@
+[sop]
+name = "explicit-next"
+description = "Publish a release artifact only after its checksum is verified"
+version = "1.2.0"
+priority = "high"
+max_concurrent = 1
+admission_policy = "hold"
+
+[[triggers]]
+type = "webhook"
+path = "/sop/explicit-next"

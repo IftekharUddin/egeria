@@ -1,0 +1,14 @@
+[sop]
+name = "switch-multiway"
+description = "Dispatch a forge event to the handler that matches its event type"
+version = "2.0.0"
+priority = "normal"
+execution_mode = "auto"
+max_concurrent = 2
+admission_policy = "parallel"
+
+[[triggers]]
+type = "channel"
+channel = "git"
+alias = "main"
+condition = "$.event_type != \"push\""

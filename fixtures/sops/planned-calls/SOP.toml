@@ -1,0 +1,20 @@
+[sop]
+name = "planned-calls"
+description = "Assemble release notes from planned tool calls and post them back to the forge"
+version = "1.0.3"
+priority = "normal"
+execution_mode = "step_by_step"
+cooldown_secs = 300
+max_concurrent = 1
+admission_policy = "hold"
+max_pending_approvals = 1
+agent = "release-bot"
+
+[[triggers]]
+type = "channel"
+channel = "git"
+alias = "main"
+condition = "$.event_type == \"release.published\""
+
+[[triggers]]
+type = "manual"
